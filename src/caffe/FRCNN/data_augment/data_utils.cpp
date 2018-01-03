@@ -308,10 +308,12 @@ void correct_boxes(box_label *boxes, int n, float dx, float dy, float sx, float 
 	int i;
 	for (i = 0; i < n; ++i){
 		if (boxes[i].x == 0 && boxes[i].y == 0) { // fyk: this will not affect the network learning
-			boxes[i].x = 999999;
+		/*	boxes[i].x = 999999;
 			boxes[i].y = 999999;
 			boxes[i].w = 999999;
 			boxes[i].h = 999999;
+		*/
+			std::cout << "=======WARNING====correct_boxes=====this shouldn't happen!" << std::endl;
 			continue;
 		}
 		boxes[i].left = boxes[i].left  * sx - dx;

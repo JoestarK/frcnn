@@ -240,7 +240,7 @@ void FrcnnRoiDataLayer<Dtype>::load_batch(Batch<Dtype> *batch) {
   CHECK(lines_id_ < lines_.size() && lines_id_ >= 0) << "select error line id : " << lines_id_;
   int index = lines_[lines_id_];
   bool do_mirror = mirror && PrefetchRand() % 2 && this->phase_ == TRAIN;
-  bool do_augment = do_mirror;
+  bool do_augment = PrefetchRand() % 2 && this->phase_ == TRAIN;
   float max_short = scales[PrefetchRand() % scales.size()];
 
   read_time += timer.MicroSeconds();
@@ -260,9 +260,10 @@ void FrcnnRoiDataLayer<Dtype>::load_batch(Batch<Dtype> *batch) {
   }
   cv::Mat src;
   cv_img.convertTo(src, CV_32FC3);
-  if (do_mirror) {
-    cv::flip(src, src, 1); // Flip
-  }
+  // leave this to data augment,or the code is hard to orgnize
+  //if (do_mirror) {
+  //  cv::flip(src, src, 1); // Flip
+  //}
   CHECK(src.isContinuous()) << "Warning : cv::Mat src is not Continuous !";
   CHECK_EQ(src.depth(), CV_32F) << "Image data type must be float 32 type";
   CHECK_EQ(src.channels(), 3) << "Image data type must be 3 channels";
@@ -281,7 +282,9 @@ void FrcnnRoiDataLayer<Dtype>::load_batch(Batch<Dtype> *batch) {
   }
   vector<vector<float> > rois = roi_database_[index];
   if (do_augment) {
-    src = data_augment(src, rois, 0, FrcnnParam::data_jitter, FrcnnParam::data_hue, FrcnnParam::data_saturation, FrcnnParam::data_exposure);
+  //std::cout<<rois[0][DataPrepare::X1] << ' '<<rois[0][DataPrepare::Y1]<<' ' << rois[0][DataPrepare::X2] <<' '<<rois[0][DataPrepare::Y2]<<std::endl;
+    src = data_augment(src, rois, do_mirror, FrcnnParam::data_jitter, FrcnnParam::data_hue, FrcnnParam::data_saturation, FrcnnParam::data_exposure);
+  //std::cout<<rois[0][DataPrepare::X1] << ' '<<rois[0][DataPrepare::Y1]<<' ' << rois[0][DataPrepare::X2] <<' '<<rois[0][DataPrepare::Y2]<<std::endl;
   }
   //fyk: do haze free,NOTICE that data enhancement should only be done one, current prioty is haze-free > retinex > hist_equalize
   if (FrcnnParam::use_haze_free) {
@@ -344,9 +347,9 @@ void FrcnnRoiDataLayer<Dtype>::load_batch(Batch<Dtype> *batch) {
   CheckResetRois(rois, image_database_[index], cv_img.cols, cv_img.rows, im_scale);
   
   // Flip
-  if (do_mirror) {
-    FlipRois(rois, cv_img.cols);
-  }
+  //if (do_mirror) {
+  //  FlipRois(rois, cv_img.cols);
+  //}
 
   CHECK_EQ(rois.size(), channels-1);
   for (int i = 1; i < channels; i++) {
