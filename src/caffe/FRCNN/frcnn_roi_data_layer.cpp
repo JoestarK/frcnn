@@ -192,7 +192,8 @@ unsigned int FrcnnRoiDataLayer<Dtype>::PrefetchRand() {
 template <typename Dtype>
 void FrcnnRoiDataLayer<Dtype>::CheckResetRois(vector<vector<float> > &rois, const string image_path, const float cols, const float rows, const float im_scale) {
   for (int i = 0; i < rois.size(); i++) {
-    bool ok = rois[i][DataPrepare::X1] >= 0 && rois[i][DataPrepare::Y1] >= 0 && 
+  //changed by fyk to exclude 0
+    bool ok = rois[i][DataPrepare::X1] > 0 && rois[i][DataPrepare::Y1] > 0 && 
         rois[i][DataPrepare::X2] < cols && rois[i][DataPrepare::Y2] < rows;
     if (ok == false) {
       DLOG(INFO) << "Roi Data Check Failed : " << image_path << " [" << i << "]";
@@ -283,7 +284,7 @@ void FrcnnRoiDataLayer<Dtype>::load_batch(Batch<Dtype> *batch) {
   vector<vector<float> > rois = roi_database_[index];
   if (do_augment) {
   //std::cout<<rois[0][DataPrepare::X1] << ' '<<rois[0][DataPrepare::Y1]<<' ' << rois[0][DataPrepare::X2] <<' '<<rois[0][DataPrepare::Y2]<<std::endl;
-    src = data_augment(src, rois, do_mirror, FrcnnParam::data_jitter, FrcnnParam::data_hue, FrcnnParam::data_saturation, FrcnnParam::data_exposure);
+    //src = data_augment(src, rois, do_mirror, FrcnnParam::data_jitter, FrcnnParam::data_hue, FrcnnParam::data_saturation, FrcnnParam::data_exposure);
   //std::cout<<rois[0][DataPrepare::X1] << ' '<<rois[0][DataPrepare::Y1]<<' ' << rois[0][DataPrepare::X2] <<' '<<rois[0][DataPrepare::Y2]<<std::endl;
   }
   //fyk: do haze free,NOTICE that data enhancement should only be done one, current prioty is haze-free > retinex > hist_equalize
